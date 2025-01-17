@@ -3,7 +3,7 @@ Copyright 2018 Jason Litzinger
 See LICENSE for details.
 """
 import struct
-from typing import Union # pylint: disable=unused-import
+from typing import Optional
 
 import attr
 
@@ -34,8 +34,7 @@ def _check_will_qos(instance, _attribute, value):
         raise ValueError('Will QOS requires topic/message')
 
 
-def encode_remainining_length(remaining_length):
-    # type: (int) -> bytes
+def encode_remainining_length(remaining_length: int) -> bytes:
     """Encode the remaining length for the packet.
 
     :returns: Encoded remaining length
@@ -267,8 +266,7 @@ def subscribe(packetid, topicspecs):
     return b''.join(encoded_specs)
 
 
-def disconnect():
-    # type: () -> bytes
+def disconnect() -> bytes:
     """Build a DISCONNECT packet."""
     return struct.pack(
         "!BB",
@@ -277,8 +275,7 @@ def disconnect():
     )
 
 
-def publish(topic, dup, qos, retain, payload, packet_id=None):
-    # type: (str, bool, int, bool, bytes, Union[None,int]) -> bytes
+def publish(topic: str, dup: bool, qos: int, retain: bool, payload: bytes, packet_id: Optional[int] = None):
     """Build a PUBLISH packet.
     """
     #remaining_len = (topiclen after encoding + 2) + (2 | 0 if packetid) + payload_len
@@ -320,8 +317,7 @@ def publish(topic, dup, qos, retain, payload, packet_id=None):
     ))
 
 
-def unsubscribe(packet_id, topics):
-    # (int, List[str]) -> bytes
+def unsubscribe(packet_id: int, topics: list[str]) -> bytes:
     """Build an UNSUBSCRIBE message for the specified topics."""
     if not topics:
         raise ValueError('At least one topic must be specified')
