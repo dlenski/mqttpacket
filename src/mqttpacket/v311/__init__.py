@@ -16,6 +16,7 @@ from ._builders import (
 
 from ._parsing import (
     parse,
+    parse_into,
     parse_connack,
 )
 

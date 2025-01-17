@@ -162,7 +162,23 @@ def check_total_len(data: AnyBytes, offset: int, remaining_length: int, variable
     size_rem_len = variable_begin - offset - 1
     return (len(data) - offset) == (remaining_length + 1 + size_rem_len)
 
-def parse(data: AnyBytes, output: list) -> int:
+
+def parse(data: AnyBytes) -> tuple[int, list]:
+    """Parse packets from data.
+
+    :param data: Data to parse into MQTT packets
+
+    :param output: Output list for storing parsed packets.
+
+    :returns: (number of bytes from data consumed, list of parsed packets)
+
+    """
+    output: list = []
+    n: int = parse_into(data, output)
+    return n, output
+
+
+def parse_into(data: AnyBytes, output: list) -> int:
     """Parse packets from data.
 
     :param data: Data to parse into MQTT packets
