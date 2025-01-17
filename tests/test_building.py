@@ -3,7 +3,6 @@
 Copyright 2018 Jason Litzinger
 See LICENSE for details.
 """
-import binascii
 import json
 
 import pytest
@@ -15,9 +14,7 @@ def test_connect_basic():
     """
     A connect packet with only a client id is properly constructed.
     """
-    expect = binascii.unhexlify(
-        b'101000044d5154540402003c000474657374'
-    )
+    expect = bytes.fromhex('101000044d5154540402003c000474657374')
     packet = mqttpacket.connect(u'test')
     assert packet == expect
     assert isinstance(packet, bytes)
@@ -253,12 +250,10 @@ def test_publish():
         True,
         payload_str
     )
-    print(binascii.hexlify(publish))
+    print(publish.hex())
     assert publish[0] == 49
     assert publish[1] == 22
-    expect = binascii.unhexlify(
-        b'31160004746573747b2274657374223a202274657374227d'
-    )
+    expect = bytes.fromhex('31160004746573747b2274657374223a202274657374227d')
     assert publish == expect
 
 
@@ -297,9 +292,7 @@ def test_publish_qos_1():
         u'foo'.encode('utf-8'),
         packet_id=255
     )
-    expect = binascii.unhexlify(
-        b'330b00047465737400ff666f6f'
-    )
+    expect = bytes.fromhex('330b00047465737400ff666f6f')
     assert publish == expect
 
 
@@ -315,9 +308,7 @@ def test_publish_qos_2():
         u'foo'.encode('utf-8'),
         packet_id=256
     )
-    expect = binascii.unhexlify(
-        b'340b0004746573740100666f6f'
-    )
+    expect = bytes.fromhex('340b0004746573740100666f6f')
     assert publish == expect
 
 
@@ -333,9 +324,7 @@ def test_publish_dup():
         u'foo'.encode('utf-8'),
         packet_id=256
     )
-    expect = binascii.unhexlify(
-        b'3a0b0004746573740100666f6f'
-    )
+    expect = bytes.fromhex('3a0b0004746573740100666f6f')
     assert publish == expect
 
 
