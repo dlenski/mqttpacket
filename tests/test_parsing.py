@@ -20,7 +20,7 @@ def test_parse_publish_simple():
     c, msgs = _parsing.parse(data)
     assert len(data) == c
     assert len(msgs) == 1
-    payload = msgs[0].payload.decode('utf-8')
+    payload = msgs[0].payload
     res = json.loads(payload)
     assert res == {"test": "test"}
     assert msgs[0].packetid is None
@@ -39,7 +39,7 @@ def test_parse_publish_qos():
     c, msgs = _parsing.parse(data)
     assert len(data) == c
     assert len(msgs) == 1
-    payload = msgs[0].payload.decode('utf-8')
+    payload = msgs[0].payload
     res = json.loads(payload)
     assert res == {"test": "test"}
     assert msgs[0].packetid == 3
