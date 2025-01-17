@@ -5,9 +5,12 @@ See LICENSE for details.
 import struct
 from typing import Optional
 
-import attr
-
+from dataclasses import field
 from . import _constants
+
+# wrapped for Python < 3.10
+from ._packet import dataclass
+
 
 _CONNECT_REMAINING_LENGTH = 10
 
@@ -58,43 +61,28 @@ def encode_string(text):
     return b''.join([text_len, encoded_text])
 
 
-@attr.s
-class ConnectSpec(object):
+@dataclass
+class ConnectSpec:
     """
     Data class for connection related options.
     """
-    username = attr.ib(
-        default=None,
-        validator=_check_none_or_text,
-    )
-    password = attr.ib(
-        default=None,
-        validator=[
-            _check_none_or_text,
-            _check_password,
-        ],
-    )
-    will_topic = attr.ib(
-        default=None,
-        validator=[
-            _check_none_or_text,
-            _check_will_topic
-        ],
-    )
-    will_message = attr.ib(
-        default=None,
-        validator=[
-            _check_none_or_text,
-            _check_will_message
-        ]
-    )
-    will_qos = attr.ib(
-        default=0x00,
-        validator=[
-            attr.validators.in_(_constants.VALID_QOS),
-            _check_will_qos,
-        ]
-    )
+    username: Optional[str] = None
+    password: Optional[str] = None
+    will_topic: Optional[str] = None
+    will_message: Optional[str] = None
+    will_qos: int = 0x00
+
+    def __post_init__(self):
+        if self.password is not None and self.username is None:
+            raise ValueError('Password requires username.')
+        if self.will_topic is not None and self.will_message is None:
+            raise ValueError('Will message must be set with will topic')
+        if self.will_message is not None and self.will_topic is None:
+            raise ValueError('Will topic must be set with will message')
+        if self.will_qos != 0x00 and self.will_topic is None:
+            raise ValueError('Will QOS requires topic/message')
+        if self.will_qos not in _constants.VALID_QOS:
+            raise ValueError('qos must be 0 <= qos < 3')
 
     def flags(self):
         """Get the flags for this connect spec."""
@@ -195,27 +183,20 @@ def pingreq():
     return b'\xc0\x00'
 
 
-def _validate_qos(_instance, _attribute, value):
-    if not 0 <= value < 3:
-        raise ValueError('qos must be 0 <= qos < 3')
-
-
-@attr.s(slots=True)
-class SubscriptionSpec(object):
+@dataclass(slots=True)
+class SubscriptionSpec:
     """
     A data class for a topicfilter qos pair.
     """
-    topicfilter = attr.ib(
-        validator=attr.validators.instance_of(str),
-    )
+    topicfilter: str
 
-    qos = attr.ib(
-        validator=_validate_qos,
-    )
+    qos: int
 
-    _encoded = attr.ib(init=False)
+    _encoded: bytes = field(init=False)
 
-    def __attrs_post_init__(self):
+    def __post_init__(self):
+        if not 0 <= self.qos < 3:
+            raise ValueError('qos must be 0 <= qos < 3')
         self._encoded = self.topicfilter.encode('utf-8')
 
     def remaining_len(self):

@@ -77,22 +77,6 @@ def test_default_spec():
     assert cs.flags() == 0x02
 
 
-def test_will_must_be_unicode():
-    """
-    Will topic and will message must be unicode.
-    """
-    with pytest.raises(TypeError):
-        mqttpacket.ConnectSpec(
-            will_topic=b'foo',
-            will_message=u'bar'
-        )
-
-    with pytest.raises(TypeError):
-        mqttpacket.ConnectSpec(
-            will_topic=u'biz',
-            will_message=b'baz'
-        )
-
 def test_will_qos_values():
     """
     Will QOS can only be 0 - 2

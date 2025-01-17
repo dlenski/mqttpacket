@@ -107,9 +107,9 @@ def parse_publish(data: AnyBytes, remaining_length: int, variable_begin: int) ->
         variable_begin += 2
 
     return _packet.PublishPacket(
-        (flags & 0x08) >> 3,
+        bool((flags & 0x08) >> 3),
         qos,
-        flags & 0x1,
+        bool(flags & 0x1),
         topic,
         packetid,
         data[variable_begin:end_packet]

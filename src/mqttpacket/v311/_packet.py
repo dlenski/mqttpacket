@@ -2,12 +2,23 @@
 Copyright 2018 Jason Litzinger
 See LICENSE for details
 """
-import attr
+import sys
+from dataclasses import dataclass, field
+
+from typing import Optional
 
 from . import _constants
 
-@attr.s
-class ConnackPacket(object):
+if sys.version_info < (3, 10):
+    from functools import wraps
+    from dataclasses import dataclass as _dataclass
+    @wraps(_dataclass)
+    def dataclass(cls=None, /, *, slots=False, **kwargs):
+        return _dataclass(cls, **kwargs)
+
+
+@dataclass
+class ConnackPacket:
     """Parsed CONNACK packet
 
     :ivar return_code: Return code from the connect operation.
@@ -16,63 +27,64 @@ class ConnackPacket(object):
 
     :ivar pkt_type: MQTT_PACKET_CONNACK
     """
-    return_code = attr.ib()
-    session_present = attr.ib()
-    pkt_type = attr.ib(default=_constants.MQTT_PACKET_CONNACK)
+    return_code: int
+    session_present: int
+    pkt_type: int = _constants.MQTT_PACKET_CONNACK
 
 
-@attr.s
-class SubackPacket(object):
+@dataclass
+class SubackPacket:
     """Parsed SUBACK packet
 
     """
-    packet_id = attr.ib()
-    return_codes = attr.ib()
-    pkt_type = attr.ib(default=_constants.MQTT_PACKET_SUBACK)
+    packet_id: int
+    return_codes: list[int]
+    pkt_type: int = _constants.MQTT_PACKET_SUBACK
 
 
-@attr.s(slots=True)
-class PublishPacket(object):
+@dataclass(slots=True)
+class PublishPacket:
     """
     Packet representing an incoming publish message.
     """
-    dup = attr.ib()
-    qos = attr.ib(
-        validator=attr.validators.in_(_constants.VALID_QOS)
-    )
-    retain = attr.ib()
-    topic = attr.ib()
-    packetid = attr.ib()
-    payload = attr.ib()
-    pkt_type = attr.ib(default=_constants.MQTT_PACKET_PUBLISH)
+    dup: bool
+    qos: int
+    retain: bool
+    topic: str
+    packetid: Optional[int]
+    payload: bytes
+    pkt_type: int = _constants.MQTT_PACKET_PUBLISH
+
+    def __post_init__(self):
+        assert self.qos in _constants.VALID_QOS
 
 
-@attr.s(slots=True)
-class DisconnectPacket(object):
+@dataclass(slots=True)
+class DisconnectPacket:
     """
     Packet representing a disconnect
 
     :ivar reserved: Reserved bits from the packet.
     """
-    reserved = attr.ib()
-    pkt_type = attr.ib(default=_constants.MQTT_PACKET_DISCONNECT)
+    reserved: int
+    pkt_type: int = _constants.MQTT_PACKET_DISCONNECT
 
 
-@attr.s(slots=True)
-class PubackPacket(object):
+@dataclass(slots=True)
+class PubackPacket:
     """
     Class representing a PUBACK packet.
 
     :ivar packet_id: The packet identifier being ack'd.
     """
-    packet_id = attr.ib()
-    pkt_type = attr.ib(default=_constants.MQTT_PACKET_PUBACK)
+    packet_id: int
+    pkt_type: int = _constants.MQTT_PACKET_PUBACK
 
 
-@attr.s(slots=True)
-class PingrespPacket(object):
+@dataclass(slots=True)
+class PingrespPacket:
     """
     Class representing a PINGRESP packet.  In
     generally this can be created once and reused.
     """
-    pkt_type = attr.ib(default=_constants.MQTT_PACKET_PINGRESP)
+    pkt_type: int = _constants.MQTT_PACKET_PINGRESP
