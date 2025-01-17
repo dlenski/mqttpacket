@@ -5,7 +5,6 @@ See LICENSE for details.
 A parser should either consume all packet data, or raise and error.
 
 """
-from __future__ import absolute_import
 from typing import (  # pylint: disable=unused-import
     ByteString,
     List,

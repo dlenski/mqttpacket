@@ -6,7 +6,6 @@ import struct
 from typing import Union # pylint: disable=unused-import
 
 import attr
-import six
 
 from . import _constants
 
@@ -15,8 +14,8 @@ _CONNECT_REMAINING_LENGTH = 10
 PROTOCOL_NAME = 'MQTT'.encode('utf-8')
 
 def _check_none_or_text(_instance, attribute, value):
-    if value is not None and not isinstance(value, six.text_type):
-        raise TypeError('{} must be None or text'.format(attribute))
+    if value is not None and not isinstance(value, str):
+        raise TypeError('{} must be None or str'.format(attribute))
 
 def _check_will_message(instance, _attribute, value):
     if value is not None and instance.will_topic is None:
@@ -58,8 +57,8 @@ def encode_remainining_length(remaining_length):
 
 def encode_string(text):
     """Encode a string as per MQTT spec: two byte length, UTF-8 data"""
-    if not isinstance(text, six.text_type):
-        raise TypeError('text must be unicode')
+    if not isinstance(text, str):
+        raise TypeError('text must be str')
 
     encoded_text = text.encode('utf-8')
     text_len = struct.pack('!H', len(encoded_text))
@@ -156,9 +155,7 @@ def connect(client_id, keepalive=60, connect_spec=None):
 
     remaining_length = 0
 
-    msg = six.int2byte(
-        (_constants.MQTT_PACKET_CONNECT << 4),
-    )
+    msg = (_constants.MQTT_PACKET_CONNECT << 4).to_bytes(1, "big")
 
     parts = [msg]
 
@@ -216,7 +213,7 @@ class SubscriptionSpec(object):
     A data class for a topicfilter qos pair.
     """
     topicfilter = attr.ib(
-        validator=attr.validators.instance_of(six.text_type),
+        validator=attr.validators.instance_of(str),
     )
 
     qos = attr.ib(
@@ -258,9 +255,7 @@ def subscribe(packetid, topicspecs):
     for spec in topicspecs:
         remaining_len += spec.remaining_len()
 
-    msg = six.int2byte(
-        (_constants.MQTT_PACKET_SUBSCRIBE << 4) | 0x02,
-    )
+    msg = ((_constants.MQTT_PACKET_SUBSCRIBE << 4) | 0x02).to_bytes(1, "big")
 
     encoded_specs = [msg]
     encoded_specs.append(encode_remainining_length(remaining_len))
@@ -290,7 +285,7 @@ def publish(topic, dup, qos, retain, payload, packet_id=None):
     if qos not in _constants.VALID_QOS:
         raise ValueError('QoS must be 0, 1, or 2')
 
-    if not isinstance(topic, six.text_type):
+    if not isinstance(topic, str):
         raise ValueError('Qos must be 0, 1, or 2')
 
     if qos > 0 and packet_id is None:
@@ -317,7 +312,7 @@ def publish(topic, dup, qos, retain, payload, packet_id=None):
     byte1 |= qos << 1
     byte1 |= int(retain)
     return b''.join((
-        six.int2byte(byte1),
+        byte1.to_bytes(1, "big"),
         rl,
         encoded_topic,
         encoded_packet_id,
@@ -337,7 +332,7 @@ def unsubscribe(packet_id, topics):
     for et in encoded_topics:
         remaining_len += len(et)
 
-    parts = [six.int2byte((_constants.MQTT_PACKET_UNSUBSCRIBE << 4) | 0x1)]
+    parts = [((_constants.MQTT_PACKET_UNSUBSCRIBE << 4) | 0x1).to_bytes(1, "big")]
     parts.append(encode_remainining_length(remaining_len))
     parts.append(encoded_packet_id)
     parts.extend(encoded_topics)

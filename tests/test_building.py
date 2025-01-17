@@ -6,7 +6,6 @@ See LICENSE for details.
 import binascii
 import json
 
-import six
 import pytest
 
 import mqttpacket.v311 as mqttpacket
@@ -23,8 +22,8 @@ def test_connect_basic():
     assert packet == expect
     assert isinstance(packet, bytes)
     assert len(packet) == 18
-    assert six.indexbytes(packet, 0) == 16
-    assert six.indexbytes(packet, 9) == 0x02
+    assert packet[0] == 16
+    assert packet[9] == 0x02
     assert packet[14:].decode('utf-8') == u'test'
 
 
@@ -133,8 +132,8 @@ def test_connect_with_spec():
     packet = mqttpacket.connect(u'test', connect_spec=cs)
     assert isinstance(packet, bytes)
     assert len(packet) == 50
-    assert six.indexbytes(packet, 0) == 16
-    assert six.indexbytes(packet, 9) == 0x0e
+    assert packet[0] == 16
+    assert packet[9] == 0x0e
     assert packet[14:18].decode('utf-8') == u'test'
 
 
@@ -150,15 +149,15 @@ def test_build_subscription_multiple():
     ]
     packet = mqttpacket.subscribe(10, specs)
     assert isinstance(packet, bytes)
-    assert six.indexbytes(packet, 0) == 0x82
-    assert six.indexbytes(packet, 1) == 14
-    assert six.indexbytes(packet, 2) << 8 | six.indexbytes(packet, 3) == 10
-    assert six.indexbytes(packet, 4) << 8 | six.indexbytes(packet, 5) == 3
+    assert packet[0] == 0x82
+    assert packet[1] == 14
+    assert packet[2] << 8 | packet[3] == 10
+    assert packet[4] << 8 | packet[5] == 3
     assert packet[6:9].decode('utf-8') == u'a/b'
-    assert six.indexbytes(packet, 9) == 0x01
-    assert six.indexbytes(packet, 10) << 8 | six.indexbytes(packet, 11) == 3
+    assert packet[9] == 0x01
+    assert packet[10] << 8 | packet[11] == 3
     assert packet[12:15].decode('utf-8') == u'c/d'
-    assert six.indexbytes(packet, 15) == 0x02
+    assert packet[15] == 0x02
 
 
 def test_build_subscription_single():
@@ -172,12 +171,12 @@ def test_build_subscription_single():
     ]
     packet = mqttpacket.subscribe(10, specs)
     assert isinstance(packet, bytes)
-    assert six.indexbytes(packet, 0) == 0x82
-    assert six.indexbytes(packet, 1) == 11
-    assert six.indexbytes(packet, 2) << 8 | six.indexbytes(packet, 3) == 10
-    assert six.indexbytes(packet, 4) << 8 | six.indexbytes(packet, 5) == 6
+    assert packet[0] == 0x82
+    assert packet[1] == 11
+    assert packet[2] << 8 | packet[3] == 10
+    assert packet[4] << 8 | packet[5] == 6
     assert packet[6:12].decode('utf-8') == u'test/1'
-    assert six.indexbytes(packet, 12) == 0x00
+    assert packet[12] == 0x00
 
 
 def test_subscription_spec_multibyte():
@@ -255,8 +254,8 @@ def test_publish():
         payload_str
     )
     print(binascii.hexlify(publish))
-    assert six.indexbytes(publish, 0) == 49
-    assert six.indexbytes(publish, 1) == 22
+    assert publish[0] == 49
+    assert publish[1] == 22
     expect = binascii.unhexlify(
         b'31160004746573747b2274657374223a202274657374227d'
     )
@@ -379,7 +378,7 @@ def test_unsubscribe():
     """
     msg = mqttpacket.unsubscribe(257, [u'a/b', u'c/d'])
     assert msg[:1] == b'\xa1'
-    assert six.indexbytes(msg, 1) == 12
+    assert msg[1] == 12
     assert msg[2:4] == b'\x01\x01'
     assert msg[4:6] == b'\x00\x03'
     assert msg[6:9] == u'a/b'.encode('utf-8')
