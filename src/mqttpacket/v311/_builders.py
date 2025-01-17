@@ -14,7 +14,7 @@ from ._packet import dataclass
 
 _CONNECT_REMAINING_LENGTH = 10
 
-PROTOCOL_NAME = 'MQTT'.encode('utf-8')
+PROTOCOL_NAME = b'MQTT'
 
 def _check_none_or_text(_instance, attribute, value):
     if value is not None and not isinstance(value, str):
@@ -56,7 +56,7 @@ def encode_string(text):
     if not isinstance(text, str):
         raise TypeError('text must be str')
 
-    encoded_text = text.encode('utf-8')
+    encoded_text = text.encode()
     text_len = len(encoded_text).to_bytes(2, 'big')
     return b''.join([text_len, encoded_text])
 
@@ -197,7 +197,7 @@ class SubscriptionSpec:
     def __post_init__(self):
         if not 0 <= self.qos < 3:
             raise ValueError('qos must be 0 <= qos < 3')
-        self._encoded = self.topicfilter.encode('utf-8')
+        self._encoded = self.topicfilter.encode()
 
     def remaining_len(self):
         """

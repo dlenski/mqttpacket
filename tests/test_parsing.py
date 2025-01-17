@@ -24,7 +24,7 @@ def test_parse_publish_simple():
     res = json.loads(payload)
     assert res == {"test": "test"}
     assert msgs[0].packetid is None
-    assert msgs[0].topic == u'test'
+    assert msgs[0].topic == 'test'
     assert msgs[0].pkt_type == _constants.MQTT_PACKET_PUBLISH
     assert msgs[0].qos == 0
     assert not msgs[0].dup
@@ -43,7 +43,7 @@ def test_parse_publish_qos():
     res = json.loads(payload)
     assert res == {"test": "test"}
     assert msgs[0].packetid == 3
-    assert msgs[0].topic == u'test'
+    assert msgs[0].topic == 'test'
     assert msgs[0].pkt_type == _constants.MQTT_PACKET_PUBLISH
     assert msgs[0].qos == 1
     assert not msgs[0].dup

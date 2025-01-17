@@ -15,13 +15,13 @@ def test_connect_basic():
     A connect packet with only a client id is properly constructed.
     """
     expect = bytes.fromhex('101000044d5154540402003c000474657374')
-    packet = mqttpacket.connect(u'test')
+    packet = mqttpacket.connect('test')
     assert packet == expect
     assert isinstance(packet, bytes)
     assert len(packet) == 18
     assert packet[0] == 16
     assert packet[9] == 0x02
-    assert packet[14:].decode('utf-8') == u'test'
+    assert packet[14:].decode() == 'test'
 
 
 def test_will_requirements():
@@ -30,12 +30,12 @@ def test_will_requirements():
     """
     with pytest.raises(ValueError):
         mqttpacket.ConnectSpec(
-            will_topic=u'foo',
+            will_topic='foo',
         )
 
     with pytest.raises(ValueError):
         mqttpacket.ConnectSpec(
-            will_message=u'my message',
+            will_message='my message',
         )
 
 
@@ -44,26 +44,26 @@ def test_valid_will():
     A valid will topic/message spec sets flags and payload.
     """
     cs = mqttpacket.ConnectSpec(
-        will_topic=u'my_will_topic',
-        will_message=u'my_will_message',
+        will_topic='my_will_topic',
+        will_message='my_will_message',
         will_qos=1,
     )
 
-    wt = u'my_will_topic'
-    wm = u'my_will_message'
+    wt = 'my_will_topic'
+    wm = 'my_will_message'
     assert cs.will_topic == wt
     assert cs.will_message == wm
     assert cs.flags() == 0x0e
     assert len(cs.payload()) == 32
 
     cs = mqttpacket.ConnectSpec(
-        will_topic=u'wt2',
-        will_message=u'wm2',
+        will_topic='wt2',
+        will_message='wm2',
         will_qos=2,
     )
 
-    assert cs.will_topic == u'wt2'
-    assert cs.will_message == u'wm2'
+    assert cs.will_topic == 'wt2'
+    assert cs.will_message == 'wm2'
     assert cs.flags() == 0x16
 
 
@@ -83,20 +83,20 @@ def test_will_qos_values():
     """
     with pytest.raises(ValueError):
         mqttpacket.ConnectSpec(
-            will_topic=u'biz',
-            will_message=u'baz',
+            will_topic='biz',
+            will_message='baz',
             will_qos=3
         )
 
     mqttpacket.ConnectSpec(
-        will_topic=u'my_will_topic',
-        will_message=u'my_will_message',
+        will_topic='my_will_topic',
+        will_message='my_will_message',
         will_qos=1
     )
 
     mqttpacket.ConnectSpec(
-        will_topic=u'my_will_topic',
-        will_message=u'my_will_message',
+        will_topic='my_will_topic',
+        will_message='my_will_message',
         will_qos=2
     )
 
@@ -106,16 +106,16 @@ def test_connect_with_spec():
     A valid connect spec is properly encoded.
     """
     cs = mqttpacket.ConnectSpec(
-        will_topic=u'my_will_topic',
-        will_message=u'my_will_message',
+        will_topic='my_will_topic',
+        will_message='my_will_message',
         will_qos=1,
     )
-    packet = mqttpacket.connect(u'test', connect_spec=cs)
+    packet = mqttpacket.connect('test', connect_spec=cs)
     assert isinstance(packet, bytes)
     assert len(packet) == 50
     assert packet[0] == 16
     assert packet[9] == 0x0e
-    assert packet[14:18].decode('utf-8') == u'test'
+    assert packet[14:18].decode() == 'test'
 
 
 def test_build_subscription_multiple():
@@ -125,8 +125,8 @@ def test_build_subscription_multiple():
     This example is from the MQTT specification.
     """
     specs = [
-        mqttpacket.SubscriptionSpec(u'a/b', 0x01),
-        mqttpacket.SubscriptionSpec(u'c/d', 0x02),
+        mqttpacket.SubscriptionSpec('a/b', 0x01),
+        mqttpacket.SubscriptionSpec('c/d', 0x02),
     ]
     packet = mqttpacket.subscribe(10, specs)
     assert isinstance(packet, bytes)
@@ -134,10 +134,10 @@ def test_build_subscription_multiple():
     assert packet[1] == 14
     assert packet[2] << 8 | packet[3] == 10
     assert packet[4] << 8 | packet[5] == 3
-    assert packet[6:9].decode('utf-8') == u'a/b'
+    assert packet[6:9].decode() == 'a/b'
     assert packet[9] == 0x01
     assert packet[10] << 8 | packet[11] == 3
-    assert packet[12:15].decode('utf-8') == u'c/d'
+    assert packet[12:15].decode() == 'c/d'
     assert packet[15] == 0x02
 
 
@@ -148,7 +148,7 @@ def test_build_subscription_single():
     This example is from the MQTT specification.
     """
     specs = [
-        mqttpacket.SubscriptionSpec(u'test/1', 0x00),
+        mqttpacket.SubscriptionSpec('test/1', 0x00),
     ]
     packet = mqttpacket.subscribe(10, specs)
     assert isinstance(packet, bytes)
@@ -156,7 +156,7 @@ def test_build_subscription_single():
     assert packet[1] == 11
     assert packet[2] << 8 | packet[3] == 10
     assert packet[4] << 8 | packet[5] == 6
-    assert packet[6:12].decode('utf-8') == u'test/1'
+    assert packet[6:12].decode() == 'test/1'
     assert packet[12] == 0x00
 
 
@@ -165,7 +165,7 @@ def test_subscription_spec_multibyte():
     A topic with multibyte characters encoded as UTF uses
     the encoded length.
     """
-    topic = u'super€'
+    topic = 'super€'
     spec = mqttpacket.SubscriptionSpec(
         topic,
         0
@@ -225,10 +225,10 @@ def test_publish():
     """
     A valid PUBLISH packet is successfully decoded.
     """
-    payload = {u'test': u'test'}
-    payload_str = json.dumps(payload).encode('utf-8')
+    payload = {'test': 'test'}
+    payload_str = json.dumps(payload).encode()
     publish = mqttpacket.publish(
-        u'test',
+        'test',
         False,
         0,
         True,
@@ -247,20 +247,20 @@ def test_publish_nonzero_qos_requires_packetid():
     """
     with pytest.raises(ValueError):
         mqttpacket.publish(
-            u'test',
+            'test',
             False,
             1,
             True,
-            u'foo'.encode('utf-8')
+            b'foo'
         )
 
     with pytest.raises(ValueError):
         mqttpacket.publish(
-            u'test',
+            'test',
             False,
             2,
             True,
-            u'foo'.encode('utf-8')
+            b'foo'
         )
 
 
@@ -269,11 +269,11 @@ def test_publish_qos_1():
     A publish with a QoS of 1 and a packet id are successfully encoded.
     """
     publish = mqttpacket.publish(
-        u'test',
+        'test',
         False,
         1,
         True,
-        u'foo'.encode('utf-8'),
+        b'foo',
         packet_id=255
     )
     expect = bytes.fromhex('330b00047465737400ff666f6f')
@@ -285,11 +285,11 @@ def test_publish_qos_2():
     A publish with a QoS of 2 and a packet id are successfully encoded.
     """
     publish = mqttpacket.publish(
-        u'test',
+        'test',
         False,
         2,
         False,
-        u'foo'.encode('utf-8'),
+        b'foo',
         packet_id=256
     )
     expect = bytes.fromhex('340b0004746573740100666f6f')
@@ -301,11 +301,11 @@ def test_publish_dup():
     A publish with dup set is successfully encoded
     """
     publish = mqttpacket.publish(
-        u'test',
+        'test',
         True,
         1,
         False,
-        u'foo'.encode('utf-8'),
+        b'foo',
         packet_id=256
     )
     expect = bytes.fromhex('3a0b0004746573740100666f6f')
@@ -318,11 +318,11 @@ def test_publish_dup_requires_qos():
     """
     with pytest.raises(ValueError):
         mqttpacket.publish(
-            u'test',
+            'test',
             True,
             0,
             False,
-            u'foo'.encode('utf-8'),
+            b'foo',
             packet_id=256
         )
 
@@ -332,11 +332,11 @@ def test_publish_payload_requires_bytes():
     """
     with pytest.raises(TypeError):
         mqttpacket.publish(
-            u'test',
+            'test',
             False,
             0,
             False,
-            u'foo'
+            'foo'
         )
 
 def test_pingreq():
@@ -349,14 +349,14 @@ def test_unsubscribe():
     """
     An unsubscribe of two topics is successfully built.
     """
-    msg = mqttpacket.unsubscribe(257, [u'a/b', u'c/d'])
+    msg = mqttpacket.unsubscribe(257, ['a/b', 'c/d'])
     assert msg[:1] == b'\xa1'
     assert msg[1] == 12
     assert msg[2:4] == b'\x01\x01'
     assert msg[4:6] == b'\x00\x03'
-    assert msg[6:9] == u'a/b'.encode('utf-8')
+    assert msg[6:9] == b'a/b'
     assert msg[9:11] == b'\x00\x03'
-    assert msg[11:] == u'c/d'.encode('utf-8')
+    assert msg[11:] == b'c/d'
 
 
 def test_unsubscribe_requires_one():

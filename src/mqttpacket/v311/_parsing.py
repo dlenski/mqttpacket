@@ -98,7 +98,7 @@ def parse_publish(data: AnyBytes, remaining_length: int, variable_begin: int) ->
 
     topic_len = (data[variable_begin] << 8) | data[variable_begin+1]
     variable_begin += 2
-    topic = data[variable_begin:variable_begin+topic_len].decode('utf-8')
+    topic = data[variable_begin:variable_begin+topic_len].decode()
     # Check for wildcard chars
     variable_begin += topic_len
     packetid = None
