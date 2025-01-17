@@ -54,7 +54,7 @@ def encode_string(text):
         raise TypeError('text must be str')
 
     encoded_text = text.encode('utf-8')
-    text_len = struct.pack('!H', len(encoded_text))
+    text_len = len(encoded_text).to_bytes(2, 'big')
     return b''.join([text_len, encoded_text])
 
 
@@ -227,9 +227,9 @@ class SubscriptionSpec(object):
     def to_bytes(self):
         """Encode this spec as bytes"""
         return b''.join([
-            struct.pack('!H', len(self._encoded)),
+            len(self._encoded).to_bytes(2, 'big'),
             self._encoded,
-            struct.pack('!B', self.qos)
+            self.qos.to_bytes(1, 'big'),
         ])
 
 
@@ -252,7 +252,7 @@ def subscribe(packetid, topicspecs):
 
     encoded_specs = [msg]
     encoded_specs.append(encode_remainining_length(remaining_len))
-    encoded_specs.append(struct.pack('!H', packetid))
+    encoded_specs.append(packetid.to_bytes(2, 'big'))
     encoded_specs.extend(
         [s.to_bytes() for s in topicspecs]
     )
@@ -279,20 +279,21 @@ def publish(topic: str, dup: bool, qos: int, retain: bool, payload: bytes, packe
     if not isinstance(topic, str):
         raise ValueError('Qos must be 0, 1, or 2')
 
-    if qos > 0 and packet_id is None:
-        raise ValueError('QoS of 1 or 2 must have a packet id')
-
-    if qos == 0 and dup:
-        raise ValueError('Dup must not be set on QoS of 0')
-
     if not isinstance(payload, bytes):
         raise TypeError('Payload must be bytes')
 
+    if qos == 0:
+        encoded_packet_id = b''
+        if dup:
+            raise ValueError('Dup must not be set on QoS of 0')
+    elif packet_id is None:
+        raise ValueError('QoS of 1 or 2 must have a packet id')
+    else:
+        encoded_packet_id = packet_id.to_bytes(2, 'big')
+
     remaining_len = len(payload)
-    encoded_packet_id = b''
     if qos > 0:
         remaining_len += _constants.PACKET_ID_LEN
-        encoded_packet_id = struct.pack('!H', packet_id)
 
     encoded_topic = encode_string(topic)
     remaining_len += len(encoded_topic)
@@ -317,7 +318,7 @@ def unsubscribe(packet_id: int, topics: list[str]) -> bytes:
         raise ValueError('At least one topic must be specified')
 
     remaining_len = 2
-    encoded_packet_id = struct.pack('!H', packet_id)
+    encoded_packet_id = packet_id.to_bytes(2, 'big')
     encoded_topics = [encode_string(t) for t in topics]
     for et in encoded_topics:
         remaining_len += len(et)
