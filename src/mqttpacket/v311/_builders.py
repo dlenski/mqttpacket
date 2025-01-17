@@ -40,17 +40,11 @@ def encode_remainining_length(remaining_length: int) -> bytes:
     :returns: Encoded remaining length
     :rtype: bytes
     """
-    encoding = True
-    encoded_bytes = bytearray()
-    encoded_byte = 0
-    while encoding:
-        encoded_byte = remaining_length % 128
-        remaining_length //= 128
-        if remaining_length:
-            encoded_byte |= 0x80
-        else:
-            encoding = False
-        encoded_bytes.append(encoded_byte)
+    encoded_bytes = []
+    while remaining_length >= 128:
+        remaining_length, encoded_byte = divmod(remaining_length, 128)
+        encoded_bytes.append(encoded_byte | 0x80)
+    encoded_bytes.append(remaining_length)
     return bytes(encoded_bytes)
 
 

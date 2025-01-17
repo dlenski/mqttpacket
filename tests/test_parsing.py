@@ -146,7 +146,7 @@ def test_parse_single_byte_remaining_length(capture_len):
 
 def test_parse_only_fixed_header(capture_len):
     """
-    A single byte remaining length is properly parsed even it 
+    A single byte remaining length is properly parsed even it
     """
     data = bytearray()
     data.extend(
@@ -219,7 +219,7 @@ def test_parse_disconnect():
     A disconnect packet is successfully parsed.
     """
     msgs = []
-    r = _parsing.parse(bytearray(disconnect()), msgs)
+    r = _parsing.parse(disconnect(), msgs)
     assert msgs[0].pkt_type == _constants.MQTT_PACKET_DISCONNECT
 
 
@@ -228,7 +228,7 @@ def test_parse_pingresp():
     A ping response returns an appropriate packet.
     """
     msgs = []
-    r = _parsing.parse(bytearray(b'\xd0\x00'), msgs)
+    r = _parsing.parse(b'\xd0\x00', msgs)
     assert msgs[0].pkt_type == _constants.MQTT_PACKET_PINGRESP
 
 
