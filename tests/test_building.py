@@ -365,3 +365,10 @@ def test_unsubscribe_requires_one():
     """
     with pytest.raises(ValueError):
         mqttpacket.unsubscribe(123, [])
+
+
+def test_puback():
+    msg = mqttpacket.puback(456)
+    assert msg[:1] == b'\x40'
+    assert msg[1] == 2
+    assert msg[2:] == (456).to_bytes(2, 'big')

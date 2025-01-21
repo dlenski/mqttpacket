@@ -250,6 +250,20 @@ def disconnect() -> bytes:
     )
 
 
+def puback(packet_id: int):
+    """Build a PUBACK packet.
+    """
+    if not 0 < packet_id < 65535:
+        raise ValueError('Packetid must be 0 < packetid < 65535')
+
+    return struct.pack(
+        "!BBH",
+        (_constants.MQTT_PACKET_PUBACK << 4),
+        2,
+        packet_id
+    )
+
+
 def publish(topic: str, dup: bool, qos: int, retain: bool, payload: bytes, packet_id: Optional[int] = None):
     """Build a PUBLISH packet.
     """
