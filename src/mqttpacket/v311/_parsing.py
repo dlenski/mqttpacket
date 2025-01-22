@@ -13,6 +13,7 @@ from typing import (
 
 
 from . import _packet, _errors, _constants
+from ._packet import MQTTPacket
 
 AnyBytes = Union[bytes, bytearray]
 
@@ -26,8 +27,6 @@ def parse_connack(data: AnyBytes, remaining_length: int, variable_begin: int) ->
     :raises: MQTTParseError if packet is malformed
     :returns: length consumed, return code and session_present flag from the
         CONNACK packet.
-
-    :rtype: int
 
     """
     if remaining_length != 2:
@@ -47,14 +46,14 @@ def parse_connack(data: AnyBytes, remaining_length: int, variable_begin: int) ->
 
 _PINGRESP = _packet.PingrespPacket()
 
-def parse_pingresp(_data, _length, _variable_begin):
+def parse_pingresp(_data, _length, _variable_begin) -> _packet.PingrespPacket:
     """
     Parse a PINGRESP, consume and discard.
     """
     return _PINGRESP
 
 
-def parse_suback(data, remaining_length, variable_begin):
+def parse_suback(data, remaining_length, variable_begin) -> _packet.SubackPacket:
     """
     Parse a SUBACK packet.
 
@@ -121,7 +120,7 @@ def parse_disconnect(data: AnyBytes, _remaining_length: int, _offset: int) -> _p
     return _packet.DisconnectPacket(data[0] & 0x0f)
 
 
-def parse_puback(data, remaining_length, offset):
+def parse_puback(data, remaining_length, offset) -> _packet.PubackPacket:
     """Parse a puback from a payload."""
     if remaining_length != 2:
         raise _errors.MQTTInvalidPacketError(
@@ -163,7 +162,7 @@ def check_total_len(data: AnyBytes, offset: int, remaining_length: int, variable
     return (len(data) - offset) == (remaining_length + 1 + size_rem_len)
 
 
-def parse(data: AnyBytes) -> tuple[int, list]:
+def parse(data: AnyBytes) -> tuple[int, list[MQTTPacket]]:
     """Parse packets from data.
 
     :param data: Data to parse into MQTT packets
@@ -178,7 +177,7 @@ def parse(data: AnyBytes) -> tuple[int, list]:
     return n, output
 
 
-def parse_into(data: AnyBytes, output: list) -> int:
+def parse_into(data: AnyBytes, output: list[MQTTPacket]) -> int:
     """Parse packets from data.
 
     :param data: Data to parse into MQTT packets

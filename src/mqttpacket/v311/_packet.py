@@ -3,6 +3,7 @@ Copyright 2018 Jason Litzinger
 See LICENSE for details
 """
 import sys
+from abc import ABC
 from dataclasses import dataclass, field
 
 from typing import Optional
@@ -17,8 +18,12 @@ if sys.version_info < (3, 10):
         return _dataclass(cls, **kwargs)
 
 
+class MQTTPacket(ABC):
+    pass
+
+
 @dataclass
-class ConnackPacket:
+class ConnackPacket(MQTTPacket):
     """Parsed CONNACK packet
 
     :ivar return_code: Return code from the connect operation.
@@ -33,7 +38,7 @@ class ConnackPacket:
 
 
 @dataclass
-class SubackPacket:
+class SubackPacket(MQTTPacket):
     """Parsed SUBACK packet
 
     """
@@ -43,7 +48,7 @@ class SubackPacket:
 
 
 @dataclass(slots=True)
-class PublishPacket:
+class PublishPacket(MQTTPacket):
     """
     Packet representing an incoming publish message.
     """
@@ -60,7 +65,7 @@ class PublishPacket:
 
 
 @dataclass(slots=True)
-class DisconnectPacket:
+class DisconnectPacket(MQTTPacket):
     """
     Packet representing a disconnect
 
@@ -71,7 +76,7 @@ class DisconnectPacket:
 
 
 @dataclass(slots=True)
-class PubackPacket:
+class PubackPacket(MQTTPacket):
     """
     Class representing a PUBACK packet.
 
@@ -82,7 +87,7 @@ class PubackPacket:
 
 
 @dataclass(slots=True)
-class PingrespPacket:
+class PingrespPacket(MQTTPacket):
     """
     Class representing a PINGRESP packet.  In
     generally this can be created once and reused.

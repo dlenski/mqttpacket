@@ -22,6 +22,7 @@ from ._parsing import (
 )
 
 from ._packet import (
+    MQTTPacket,
     ConnackPacket,
     SubackPacket,
     PublishPacket,
