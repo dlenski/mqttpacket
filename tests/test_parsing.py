@@ -17,18 +17,16 @@ def test_parse_publish_simple():
     A simple publish with QoS of 0 is successfully parsed.
     """
     data = bytes.fromhex('31150004746573747b2274657374223a2274657374227d')
-    c, msgs = _parsing.parse(data)
-    assert len(data) == c
-    assert len(msgs) == 1
-    payload = msgs[0].payload
+    msg = _parsing.parse_one(data)
+    payload = msg.payload
     res = json.loads(payload)
     assert res == {"test": "test"}
-    assert msgs[0].packetid is None
-    assert msgs[0].topic == 'test'
-    assert msgs[0].pkt_type == _constants.MQTT_PACKET_PUBLISH
-    assert msgs[0].qos == 0
-    assert not msgs[0].dup
-    assert msgs[0].retain
+    assert msg.packetid is None
+    assert msg.topic == 'test'
+    assert msg.pkt_type == _constants.MQTT_PACKET_PUBLISH
+    assert msg.qos == 0
+    assert not msg.dup
+    assert msg.retain
 
 
 def test_parse_publish_qos():
@@ -36,18 +34,16 @@ def test_parse_publish_qos():
     A publish with QoS of 1 is successfully parsed.
     """
     data = bytes.fromhex('321700047465737400037b2274657374223a2274657374227d')
-    c, msgs = _parsing.parse(data)
-    assert len(data) == c
-    assert len(msgs) == 1
-    payload = msgs[0].payload
+    msg = _parsing.parse_one(data)
+    payload = msg.payload
     res = json.loads(payload)
     assert res == {"test": "test"}
-    assert msgs[0].packetid == 3
-    assert msgs[0].topic == 'test'
-    assert msgs[0].pkt_type == _constants.MQTT_PACKET_PUBLISH
-    assert msgs[0].qos == 1
-    assert not msgs[0].dup
-    assert not msgs[0].retain
+    assert msg.packetid == 3
+    assert msg.topic == 'test'
+    assert msg.pkt_type == _constants.MQTT_PACKET_PUBLISH
+    assert msg.qos == 1
+    assert not msg.dup
+    assert not msg.retain
 
 
 def test_parse_publish_in_pieces():
@@ -62,18 +58,26 @@ def test_parse_publish_in_pieces():
     assert not msgs
 
 
+def test_parse_one_fails():
+    with pytest.raises(MQTTParseError, match='(4 of 4 bytes parsed)') as exc:
+        _parsing.parse_one(b'\xe0\x00\xe0\x00')
+    with pytest.raises(MQTTParseError, match='(2 of 3 bytes parsed)') as exc:
+        _parsing.parse_one(b'\xe0\x00\xe0')
+    with pytest.raises(MQTTParseError, match='(0 of 1 bytes parsed)') as exc:
+        _parsing.parse_one(b'\x00')
+
+
+
 def test_parse_suback():
     """
     A suback for a single successful subscribe is successfully parsed
     to a single MQTTPacket and all bytes are consumed.
     """
     data = bytes.fromhex('9003000100')
-    c, msgs = _parsing.parse(data)
-    assert len(data) == c
-    assert len(msgs) == 1
-    assert msgs[0].packet_id == 1
-    assert msgs[0].return_codes == [0]
-    assert msgs[0].pkt_type == _constants.MQTT_PACKET_SUBACK
+    msg = _parsing.parse_one(data)
+    assert msg.packet_id == 1
+    assert msg.return_codes == [0]
+    assert msg.pkt_type == _constants.MQTT_PACKET_SUBACK
 
 
 def test_parse_connack():
@@ -81,11 +85,10 @@ def test_parse_connack():
     A CONNACK for a successful connect is successfuly parsed.
     """
     data = bytes.fromhex('20020000')
-    c, msgs = _parsing.parse(data)
-    assert len(data) == c
-    assert msgs[0].return_code == 0
-    assert msgs[0].session_present == 0
-    assert msgs[0].pkt_type == _constants.MQTT_PACKET_CONNACK
+    msg = _parsing.parse_one(data)
+    assert msg.return_code == 0
+    assert msg.session_present == 0
+    assert msg.pkt_type == _constants.MQTT_PACKET_CONNACK
 
 
 @pytest.fixture(scope='function')
@@ -170,16 +173,16 @@ def test_parse_disconnect():
     """
     A disconnect packet is successfully parsed.
     """
-    r, msgs = _parsing.parse(disconnect())
-    assert msgs[0].pkt_type == _constants.MQTT_PACKET_DISCONNECT
+    msg = _parsing.parse_one(b'\xe0\x00')
+    assert msg.pkt_type == _constants.MQTT_PACKET_DISCONNECT
 
 
 def test_parse_pingresp():
     """
     A ping response returns an appropriate packet.
     """
-    r, msgs = _parsing.parse(b'\xd0\x00')
-    assert msgs[0].pkt_type == _constants.MQTT_PACKET_PINGRESP
+    msg = _parsing.parse_one(b'\xd0\x00')
+    assert msg.pkt_type == _constants.MQTT_PACKET_PINGRESP
 
 
 def test_parse_puback():
@@ -187,9 +190,9 @@ def test_parse_puback():
     A valid puback is successfully parsed.
     """
     data = bytes.fromhex('40023039')
-    r, msgs = _parsing.parse(data)
-    assert msgs[0].pkt_type == _constants.MQTT_PACKET_PUBACK
-    assert msgs[0].packet_id == 12345
+    msg = _parsing.parse_one(data)
+    assert msg.pkt_type == _constants.MQTT_PACKET_PUBACK
+    assert msg.packet_id == 12345
 
 def test_parse_puback_invalid():
     """

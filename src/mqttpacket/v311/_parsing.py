@@ -159,7 +159,25 @@ _MAX_REMAINING_LENGTH = 268435455
 def check_total_len(data: AnyBytes, offset: int, remaining_length: int, variable_begin: int) -> bool:
     """Verify enough data is available"""
     size_rem_len = variable_begin - offset - 1
-    return (len(data) - offset) == (remaining_length + 1 + size_rem_len)
+    return offset + 1 + size_rem_len + remaining_length <= len(data)
+
+
+def parse_one(data: AnyBytes) -> MQTTPacket:
+    """Parse exactly one packet from data. This should only be used
+    if the MQTT packets are pre-framed.
+    :param data: Data to parse into an MQTT packet
+
+    :raises MQTTParseError: if data doesn't contain exactly one complete packet
+
+    :returns: one parsed packet
+
+    """
+    n, pkt = parse(data)
+    if n != len(data) or len(pkt) != 1:
+        raise _errors.MQTTParseError(
+            f"Data was not parsed into exactly one packet ({n} of {len(data)} bytes parsed)",
+            n, len(data))
+    return pkt[0]
 
 
 def parse(data: AnyBytes) -> tuple[int, list[MQTTPacket]]:
@@ -200,6 +218,8 @@ def parse_into(data: AnyBytes, output: list[MQTTPacket]) -> int:
         parsing_len = True
         nb = 0
         while parsing_len:
+            if variable_begin >= len(data):
+                return consumed
             remaining_length += (data[variable_begin] & 127) * _MULTIPLIERS[nb]
             nb += 1
             parsing_len = (
